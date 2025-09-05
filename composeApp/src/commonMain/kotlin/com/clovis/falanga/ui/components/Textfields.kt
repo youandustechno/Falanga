@@ -1,5 +1,6 @@
 package com.clovis.falanga.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +12,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -18,7 +21,7 @@ import com.clovis.falanga.StringsUtil.EMPTY
 
 
 @Composable
-fun TextFieldWithIcons(value: String, icon: ImageVector, description: String, textChange:(String) -> Unit) {
+fun TextFieldWithIcons(value: String, icon: ImageBitmap, description: String, textChange:(String) -> Unit) {
 
     OutlinedTextField(
         value = value,
@@ -35,7 +38,7 @@ fun TextFieldWithIcons(value: String, icon: ImageVector, description: String, te
                         }
 
                     }) {
-                Icon(imageVector = icon, contentDescription = description)
+                Image(bitmap = icon, contentDescription = description)
             }
         },
         //trailingIcon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },

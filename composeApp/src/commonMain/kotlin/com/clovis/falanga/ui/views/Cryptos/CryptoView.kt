@@ -30,11 +30,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.clovis.falanga.PreferenceSUtil
 import com.clovis.falanga.StringsUtil.BASE_URL
 import com.clovis.falanga.StringsUtil.EMPTY
 import com.clovis.falanga.StringsUtil.SEPARATOR
+import com.clovis.falanga.WatchedShares
 import com.clovis.falanga.ui.Screen
 import com.clovis.falanga.ui.components.CryptoButton
 import com.clovis.falanga.ui.components.CryptoCard
@@ -43,19 +47,21 @@ import com.clovis.falanga.ui.getContext
 import org.jetbrains.compose.resources.stringResource
 
 
-SuppressLint("MutableCollectionMutableState")
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CryptosView(navController: NavHostController,
                 helpName: String?,
+                prefs: DataStore<Preferences>,
                 cryptoViewModel: CryptoViewModel = viewModel()) {
 
     val cryptos = cryptoViewModel.cryptoListUI.collectAsState()
     val context = getContext()
     BASE_URL =   "" //stringResource(id = R.string.main_part)
     var called  by remember { mutableStateOf(false) }
-    val list by remember {
-        mutableStateOf( PreferenceSUtil(context).getWatchedShares().toMutableList())
+    var list by remember { mutableStateOf( emptyList<WatchedShares>()) }
+
+    LaunchedEffect(Unit) {
+        list = PreferenceSUtil(prefs).getWatchedShares().toMutableList()
     }
 
     LaunchedEffect(called) {

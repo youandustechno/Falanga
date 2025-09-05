@@ -1,5 +1,8 @@
 package com.clovis.falanga.models
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Crypto(
     var id : String, //"btc-bitcoin"
     var name :String,  //"Bitcoin",
@@ -10,7 +13,7 @@ data class Crypto(
     var type: String //"coin"
 )
 
-
+@Serializable
 data class CryptoUpdate(
     var time_open: String, //"2018-03-01T00:00:00Z",
     var time_close: String, // "2018-03-01T23:59:59Z",

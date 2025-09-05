@@ -1,5 +1,6 @@
 package com.clovis.falanga.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import falanga.composeapp.generated.resources.Res
+import falanga.composeapp.generated.resources.close_img
 import falanga.composeapp.generated.resources.name_img
 import org.jetbrains.compose.resources.imageResource
 
@@ -57,7 +59,7 @@ fun SearchView(state: String, onChange:(String) -> Unit) {
                 )
             )
             Spacer(modifier = Modifier.width(5.dp))
-            Icon(imageResource( Res.drawable.name_img), contentDescription = "Search")
+           // Image(imageResource( Res.drawable.close_img), contentDescription = "Search")
         }
     }
 }

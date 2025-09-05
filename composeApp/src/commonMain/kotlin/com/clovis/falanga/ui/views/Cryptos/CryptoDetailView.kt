@@ -24,8 +24,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.clovis.falanga.PreferenceSUtil
 import com.clovis.falanga.StringsUtil.DOLLARS
 import com.clovis.falanga.StringsUtil.EMPTY
 import com.clovis.falanga.StringsUtil.SEPARATOR
@@ -37,7 +40,10 @@ import com.clovis.falanga.ui.components.DenyButton
 @Composable
 fun CryptoDetails(navController: NavHostController,
                   id: String?,
+                  prefs: DataStore<Preferences>,
                   cryptoViewModel: CryptoViewModel = viewModel()) {
+
+    val storage: PreferenceSUtil by remember { mutableStateOf(PreferenceSUtil(prefs)) }
 
     val cryptoId by remember {
         mutableStateOf(id?.substringBefore(SEPARATOR)?: EMPTY)
@@ -49,39 +55,22 @@ fun CryptoDetails(navController: NavHostController,
     }
 
     //Values
-    var buyAt by remember {
-        mutableStateOf(EMPTY)
-    }
+    val buyAt by storage.getBuyAt(name?: EMPTY)
+        .collectAsState(EMPTY)
 
-    var sellAt by remember {
-        mutableStateOf(EMPTY)
-    }
+    val sellAt by storage.getSellAt(name?: EMPTY)
+        .collectAsState(EMPTY)
 
-    var quantity by remember {
-        mutableStateOf(EMPTY)
-    }
+    val quantity by storage.getQuantity(name?: EMPTY)
+        .collectAsState(EMPTY)
 
-    var average by remember {
-        mutableStateOf(EMPTY)
-    }
+    val average by storage.getAverage(name?: EMPTY)
+        .collectAsState(EMPTY)
 
-    val context = LocalContext.current
+
 
     LaunchedEffect(key1 = Unit) {
-        PreferenceSUtil(context).apply {
-            name?.let {
-                try {
-                    buyAt = getBuyAt(it)
-                    sellAt =  getSellAt(it)
-                    average =  getAverage(it)
-                    quantity = getQuantity(it)
-                } catch (e: Exception) {
-                    Log.d("PreferenceUtils", e.message.toString())
-                }
-            }
-        }
-
-        cryptoViewModel.getCryptoInfo(cryptoId, BASE_URL)
+        cryptoViewModel.getCryptoInfo(cryptoId)
     }
 
     LazyColumn(
@@ -182,7 +171,7 @@ fun CryptoDetails(navController: NavHostController,
                                     (current - yourValue) * count
 
                                 } catch (e: Exception) {
-                                    Log.d("cloclo", ""+e.message)
+                                    print("cloclo ${e.message}")
                                     0.0
                                 }
 
@@ -194,7 +183,7 @@ fun CryptoDetails(navController: NavHostController,
                                     (toSell - current) * count
 
                                 } catch (e: Exception) {
-                                    Log.d("cloclo", ""+e.message)
+                                    print("cloclo ${e.message}")
                                     0.0
                                 }
                                 Text(text = "Current Gain : $DOLLARS$gain")

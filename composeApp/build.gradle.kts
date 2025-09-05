@@ -63,6 +63,9 @@ kotlin {
             implementation("io.ktor:ktor-serialization-kotlinx-json:3.2.3")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha07")
+            api(libs.datastore.preferences)
+            api(libs.datastore)
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

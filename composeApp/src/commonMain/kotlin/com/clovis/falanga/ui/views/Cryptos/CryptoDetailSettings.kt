@@ -19,38 +19,52 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.clovis.falanga.PreferenceSUtil
+import com.clovis.falanga.StringsUtil
 import com.clovis.falanga.StringsUtil.AVERAGE
-import com.clovis.falanga.StringsUtil.BASE_URL
 import com.clovis.falanga.StringsUtil.BUY_AT
 import com.clovis.falanga.StringsUtil.DOLLARS
 import com.clovis.falanga.StringsUtil.EMPTY
 import com.clovis.falanga.StringsUtil.QUANTITY
 import com.clovis.falanga.StringsUtil.SELL_AT
 import com.clovis.falanga.StringsUtil.SEPARATOR
+import com.clovis.falanga.WatchedShares
+import com.clovis.falanga.models.CryptoUpdate
 import com.clovis.falanga.ui.components.CryptoCard
 import com.clovis.falanga.ui.components.DenyButton
 import com.clovis.falanga.ui.components.PrecisionTextField
+import com.clovis.falanga.ui.components.TextFieldWithIcons
+import falanga.composeapp.generated.resources.Res
+import falanga.composeapp.generated.resources.close_img
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.imageResource
 
 
 @Composable
 fun CryptoDetailSettings (navController: NavHostController,
                           id: String?,
-                          cryptoViewModel: CryptoViewModel = viewModel()
-) {
-    val context = LocalContext.current
+                          prefs: DataStore<Preferences>,
+                          cryptoViewModel: CryptoViewModel = viewModel()) {
 
-    val prefs by remember {
-        mutableStateOf(PreferenceSUtil(context))
+    val storage by remember {
+        mutableStateOf(PreferenceSUtil(prefs))
     }
+
+    val scope  = rememberCoroutineScope()
 
     val cryptoId by remember {
         mutableStateOf(id?.substringBefore(SEPARATOR)?: EMPTY)
@@ -62,53 +76,50 @@ fun CryptoDetailSettings (navController: NavHostController,
     }
 
     //Values
-    var buyAt by remember {
-        mutableStateOf(name?.let { prefs.getBuyAt(it) }?: EMPTY)
-    }
+    val buyAt by storage.getBuyAt(name?:"").collectAsState("0")
+    var buyAtChange by remember { mutableStateOf("0") }
+
     var realBuyAt by remember {
         mutableStateOf(EMPTY)
     }
-    var buyAtPrecision by remember {
-        mutableStateOf(name?.let { prefs.getPrecision(it, BUY_AT) }?:"0")
-    }
 
-    var sellAt by remember {
-        mutableStateOf(name?.let { prefs.getSellAt(it) }?: EMPTY)
-    }
-    var realSellAt by remember {
-        mutableStateOf(EMPTY)
-    }
+    val buyAtPrecision by storage.getPrecision(name?: "0", BUY_AT).collectAsState("0")
+    var buyAtPrecisionChange by remember { mutableStateOf("0") }
 
-    var sellAtPrecision by remember {
-        mutableStateOf(name?.let { prefs.getPrecision(it, SELL_AT) }?:"0")
-    }
+    val sellAt by storage.getSellAt(name?: "0").collectAsState(EMPTY)
+    var sellAtChange by remember { mutableStateOf("0") }
 
-    var quantity by remember {
-        mutableStateOf(name?.let { prefs.getQuantity(it) }?: EMPTY)
-    }
+    var realSellAt by remember { mutableStateOf(EMPTY) }
+
+    val sellAtPrecision by storage.getPrecision(name?: "0", SELL_AT).collectAsState(EMPTY)
+    var sellAtPrecisionChange by  remember { mutableStateOf("0") }
+
+    val quantity by storage.getQuantity(name?:EMPTY).collectAsState(EMPTY)
+    var quantityChange by remember { mutableStateOf("0") }
+
     var realQuantity by remember {
         mutableStateOf(EMPTY)
     }
-    var quantityPrecision by remember {
-        mutableStateOf(name?.let { prefs.getPrecision(it, QUANTITY) }?:"0")
-    }
+
+    val quantityPrecision by storage.getPrecision(name?: "0", QUANTITY).collectAsState(EMPTY)
+    var quantityPrecisionChange by remember { mutableStateOf("0") }
 
     var average by remember {
-        mutableStateOf(name?.let { prefs.getAverage(it) }?: EMPTY)
+        mutableStateOf(name?.let { storage.getAverage(it) }?: EMPTY)
     }
     var realAverage by remember {
         mutableStateOf(EMPTY)
     }
-    var averagePrecision by remember {
-        mutableStateOf(name?.let { prefs.getPrecision(it, AVERAGE) }?:"0")
-    }
+    val averagePrecision by  storage.getPrecision(name?:"0", AVERAGE).collectAsState("0")
+    var averagePrecisionChange by remember { mutableStateOf("0") }
+
 
     var thisCrypto : CryptoUpdate? by remember {
         mutableStateOf(null)
     }
 
     LaunchedEffect(key1 = Unit) {
-        cryptoViewModel.getCryptoInfo(cryptoId, BASE_URL)
+        cryptoViewModel.getCryptoInfo(cryptoId)
     }
 
     LazyColumn(
@@ -176,8 +187,10 @@ fun CryptoDetailSettings (navController: NavHostController,
                             realSellAt =  StringsUtil
                                 .convertAmountWithPrecision(sellAt, sellAtPrecision)
                             Text(text = "Willing To Sell At: $DOLLARS$realSellAt")
-                            TextFieldWithIcons(sellAt, Icons.Default.Close, "Sell At") { str->
-                                sellAt = str
+                            TextFieldWithIcons(sellAt,
+                                imageResource(Res.drawable.close_img),
+                                "Sell At") { str->
+                                sellAtChange = str
                             }
                             Spacer(Modifier.height(5.dp))
                             Text(text = "Sell at Precision: $sellAtPrecision")
@@ -191,8 +204,8 @@ fun CryptoDetailSettings (navController: NavHostController,
                                         .fillMaxSize()
                                         .align(Alignment.Center),
                                     contentAlignment = Alignment.Center){
-                                    PrecisionTextField(sellAtPrecision) {
-                                        if(it.length < 2) sellAtPrecision = it
+                                    PrecisionTextField(sellAtPrecisionChange) {
+                                        if(it.length < 2) sellAtPrecisionChange = it
                                     }
                                 }
                             }
@@ -201,8 +214,9 @@ fun CryptoDetailSettings (navController: NavHostController,
                                 .convertAmountWithPrecision(buyAt, buyAtPrecision)
                             //Willing to buy at
                             Text(text = "Willing To Buy At: $DOLLARS$realBuyAt")
-                            TextFieldWithIcons(buyAt, Icons.Default.Close, "Buy At") {str ->
-                                buyAt = str
+                            TextFieldWithIcons(buyAtChange,
+                                imageResource(Res.drawable.close_img), "Buy At") { str ->
+                                buyAtChange = str
                             }
                             Spacer(Modifier.height(5.dp))
                             Text(text = "Buy at  Precision: $buyAtPrecision")
@@ -216,9 +230,9 @@ fun CryptoDetailSettings (navController: NavHostController,
                                         .fillMaxSize()
                                         .align(Alignment.Center),
                                     contentAlignment = Alignment.Center){
-                                    PrecisionTextField(buyAtPrecision) {
+                                    PrecisionTextField(buyAtPrecisionChange) {
                                         if (it.length < 2) {
-                                            buyAtPrecision = it
+                                            buyAtPrecisionChange = it
                                         }
                                     }
                                 }
@@ -237,9 +251,12 @@ fun CryptoDetailSettings (navController: NavHostController,
                             Column{
                                 //Average
                                 realAverage =  StringsUtil
-                                    .convertAmountWithPrecision(average, averagePrecision)
+                                    .convertAmountWithPrecision(average.toString(),
+                                        averagePrecision.toString())
                                 Text(text = "Average: $DOLLARS$realAverage")
-                                TextFieldWithIcons(average, Icons.Default.Close, "Average") { str->
+                                TextFieldWithIcons(average.toString(),
+                                    imageResource(Res.drawable.close_img),
+                                    "Average") { str->
                                     average = str
                                 }
                                 Spacer(Modifier.height(5.dp))
@@ -255,8 +272,8 @@ fun CryptoDetailSettings (navController: NavHostController,
                                             .fillMaxSize()
                                             .align(Alignment.Center),
                                         contentAlignment = Alignment.Center){
-                                        PrecisionTextField(averagePrecision) {
-                                            if(it.length < 2) averagePrecision = it
+                                        PrecisionTextField(averagePrecisionChange) {
+                                            if(it.length < 2) averagePrecisionChange = it
                                         }
                                     }
                                 }
@@ -264,10 +281,13 @@ fun CryptoDetailSettings (navController: NavHostController,
                                 //Quantity
                                 Spacer(Modifier.height(10.dp))
                                 realQuantity =  StringsUtil
-                                    .convertAmountWithPrecision(quantity, quantityPrecision)
+                                    .convertAmountWithPrecision(quantity,
+                                        quantityPrecision)
                                 Text(text = "Quantity: $realQuantity")
-                                TextFieldWithIcons(quantity, Icons.Default.Close, "Quantity") {str ->
-                                    quantity = str
+                                TextFieldWithIcons(quantityChange,
+                                    imageResource(Res.drawable.close_img),
+                                    "Quantity") {str ->
+                                    quantityChange = str
                                 }
                                 Spacer(Modifier.height(5.dp))
                                 Text(text = "Quantity Precision: $quantityPrecision")
@@ -283,8 +303,8 @@ fun CryptoDetailSettings (navController: NavHostController,
                                             .align(Alignment.Center),
                                         contentAlignment = Alignment.Center){
 
-                                        PrecisionTextField(quantityPrecision) {
-                                            if(it.length < 2)quantityPrecision = it
+                                        PrecisionTextField(quantityPrecisionChange) {
+                                            if(it.length < 2) quantityPrecisionChange = it
                                         }
                                     }
                                 }
@@ -302,7 +322,7 @@ fun CryptoDetailSettings (navController: NavHostController,
                                     }
 
                                 } catch (e: Exception) {
-                                    Log.d("cloclo", ""+e.message)
+                                    print("cloclo "+e.message)
                                     0.0
                                 }
 
@@ -318,7 +338,7 @@ fun CryptoDetailSettings (navController: NavHostController,
                                     }
 
                                 } catch (e: Exception) {
-                                    Log.d("cloclo", ""+e.message)
+                                    print("cloclo "+e.message)
                                     0.0
                                 }
                                 Text(text = "Current Gain : $DOLLARS$gain")
@@ -349,35 +369,35 @@ fun CryptoDetailSettings (navController: NavHostController,
             Spacer(modifier = Modifier.height(30.dp))
             Row {
                 DenyButton("Save") {
-                    try {
-                        prefs.apply {
-                            val list: MutableList<WatchedShares> = getWatchedShares().toMutableList()
-                            name?.let {
-                                if(list.size < 11) {
-                                    list.add(WatchedShares(cryptoId, it))
-                                } else {
-                                    list.removeAt(0)
-                                    list.add(WatchedShares(cryptoId, it))
+                    scope.launch {
+                        try {
+                            storage.apply {
+                                val list: MutableList<WatchedShares> = getWatchedShares().toMutableList()
+                                name?.let {
+                                    if(list.size < 11) {
+                                        list.add(WatchedShares(cryptoId, it))
+                                    } else {
+                                        list.removeAt(0)
+                                        list.add(WatchedShares(cryptoId, it))
+                                    }
+                                    saveWatchedShares(list)
+                                    saveBuyAt(realBuyAt, it)
+                                    saveSellAt(realSellAt, it)
+                                    saveAverage(realAverage, it)
+                                    saveQuantity(realQuantity, it)
+
+                                    //Save precisions
+                                    savePrecision(averagePrecision.toString(), it, AVERAGE)
+                                    savePrecision(sellAtPrecision.toString(), it, SELL_AT)
+                                    savePrecision(buyAtPrecision.toString(), it, BUY_AT)
+                                    savePrecision(quantityPrecision.toString(), it, QUANTITY)
                                 }
-
-                                saveWatchedShares(list)
-                                saveBuyAt(realBuyAt, it)
-                                saveSellAt(realSellAt, it)
-                                saveAverage(realAverage, it)
-                                saveQuantity(realQuantity, it)
-
-                                //Save precisions
-                                savePrecision(averagePrecision, it, AVERAGE)
-                                savePrecision(sellAtPrecision, it, SELL_AT)
-                                savePrecision(buyAtPrecision, it, BUY_AT)
-                                savePrecision(quantityPrecision, it, QUANTITY)
                             }
                         }
+                        catch (e:Exception) {
+                            print("ClocloVue "+ e.message)
+                        }
                     }
-                    catch (e:Exception) {
-                        Log.d("ClocloVue", ""+e.message)
-                    }
-
                     navController.popBackStack()
                 }
             }

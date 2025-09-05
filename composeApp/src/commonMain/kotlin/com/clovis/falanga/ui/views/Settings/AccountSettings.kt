@@ -10,15 +10,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.clovis.falanga.ui.components.CryptoCard
+import com.clovis.falanga.ui.views.Cryptos.CryptoViewModel
 
 
 @Composable
 fun AccountSettings (
     navController: NavHostController,
     settingsName: String?,
+    prefs: DataStore<Preferences>,
     cryptoViewModel: CryptoViewModel = viewModel()
 ) {
     Column {
