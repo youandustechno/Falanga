@@ -28,14 +28,18 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.clovis.falanga.PreferenceSUtil
+import com.clovis.falanga.PreferenceS
 import com.clovis.falanga.StringsUtil.DOLLARS
 import com.clovis.falanga.StringsUtil.EMPTY
 import com.clovis.falanga.StringsUtil.SEPARATOR
+import com.clovis.falanga.getPreferences
 import com.clovis.falanga.ui.Screen
 import com.clovis.falanga.ui.components.ConfirmButton
 import com.clovis.falanga.ui.components.CryptoCard
 import com.clovis.falanga.ui.components.DenyButton
+import com.clovis.falanga.ui.getContext
+import com.clovis.falanga.ui.isAndroid
+import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun CryptoDetails(navController: NavHostController,
@@ -43,7 +47,13 @@ fun CryptoDetails(navController: NavHostController,
                   prefs: DataStore<Preferences>,
                   cryptoViewModel: CryptoViewModel = viewModel()) {
 
-    val storage: PreferenceSUtil by remember { mutableStateOf(PreferenceSUtil(prefs)) }
+    val context = getContext()
+    val storage: PreferenceS by remember { mutableStateOf(if(isAndroid()) {
+        getPreferences(context)!!
+       } else {
+        getPreferences(prefs)!!
+       })
+    }
 
     val cryptoId by remember {
         mutableStateOf(id?.substringBefore(SEPARATOR)?: EMPTY)

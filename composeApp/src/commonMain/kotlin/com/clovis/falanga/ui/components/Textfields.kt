@@ -21,7 +21,7 @@ import com.clovis.falanga.StringsUtil.EMPTY
 
 
 @Composable
-fun TextFieldWithIcons(value: String, icon: ImageBitmap, description: String, textChange:(String) -> Unit) {
+fun TextFieldWithIcons(value: String, icon: ImageVector, description: String, textChange:(String) -> Unit) {
 
     OutlinedTextField(
         value = value,
@@ -38,7 +38,7 @@ fun TextFieldWithIcons(value: String, icon: ImageBitmap, description: String, te
                         }
 
                     }) {
-                Image(bitmap = icon, contentDescription = description)
+                Image(imageVector = icon, contentDescription = description)
             }
         },
         //trailingIcon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },

@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -39,6 +40,8 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation("io.ktor:ktor-client-okhttp:3.2.3")
+            implementation("androidx.work:work-runtime-ktx:2.9.1")
+            implementation(libs.gson)
         }
 
         iosMain.dependencies {
@@ -65,6 +68,7 @@ kotlin {
             implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha07")
             api(libs.datastore.preferences)
             api(libs.datastore)
+            implementation(compose.materialIconsExtended)
 
         }
         commonTest.dependencies {

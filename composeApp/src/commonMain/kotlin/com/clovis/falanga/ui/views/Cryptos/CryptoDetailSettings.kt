@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,7 +25,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,7 +33,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.clovis.falanga.PreferenceSUtil
+import com.clovis.falanga.PreferenceS
 import com.clovis.falanga.StringsUtil
 import com.clovis.falanga.StringsUtil.AVERAGE
 import com.clovis.falanga.StringsUtil.BUY_AT
@@ -42,16 +43,15 @@ import com.clovis.falanga.StringsUtil.QUANTITY
 import com.clovis.falanga.StringsUtil.SELL_AT
 import com.clovis.falanga.StringsUtil.SEPARATOR
 import com.clovis.falanga.WatchedShares
+import com.clovis.falanga.getPreferences
 import com.clovis.falanga.models.CryptoUpdate
 import com.clovis.falanga.ui.components.CryptoCard
 import com.clovis.falanga.ui.components.DenyButton
 import com.clovis.falanga.ui.components.PrecisionTextField
 import com.clovis.falanga.ui.components.TextFieldWithIcons
-import falanga.composeapp.generated.resources.Res
-import falanga.composeapp.generated.resources.close_img
-import kotlinx.coroutines.coroutineScope
+import com.clovis.falanga.ui.getContext
+import com.clovis.falanga.ui.isAndroid
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.imageResource
 
 
 @Composable
@@ -60,8 +60,12 @@ fun CryptoDetailSettings (navController: NavHostController,
                           prefs: DataStore<Preferences>,
                           cryptoViewModel: CryptoViewModel = viewModel()) {
 
-    val storage by remember {
-        mutableStateOf(PreferenceSUtil(prefs))
+    val context = getContext()
+    val storage: PreferenceS by remember { mutableStateOf(if(isAndroid()) {
+        getPreferences(context)!!
+    } else {
+        getPreferences(prefs)!!
+    })
     }
 
     val scope  = rememberCoroutineScope()
@@ -107,6 +111,9 @@ fun CryptoDetailSettings (navController: NavHostController,
     var average by remember {
         mutableStateOf(name?.let { storage.getAverage(it) }?: EMPTY)
     }
+
+    var averageChange by remember { mutableStateOf("0") }
+
     var realAverage by remember {
         mutableStateOf(EMPTY)
     }
@@ -125,7 +132,7 @@ fun CryptoDetailSettings (navController: NavHostController,
     LazyColumn(
         Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center) {
         item {
@@ -187,8 +194,8 @@ fun CryptoDetailSettings (navController: NavHostController,
                             realSellAt =  StringsUtil
                                 .convertAmountWithPrecision(sellAt, sellAtPrecision)
                             Text(text = "Willing To Sell At: $DOLLARS$realSellAt")
-                            TextFieldWithIcons(sellAt,
-                                imageResource(Res.drawable.close_img),
+                            TextFieldWithIcons(sellAtChange,
+                                Icons.Default.Close,
                                 "Sell At") { str->
                                 sellAtChange = str
                             }
@@ -215,7 +222,7 @@ fun CryptoDetailSettings (navController: NavHostController,
                             //Willing to buy at
                             Text(text = "Willing To Buy At: $DOLLARS$realBuyAt")
                             TextFieldWithIcons(buyAtChange,
-                                imageResource(Res.drawable.close_img), "Buy At") { str ->
+                                Icons.Default.Close, "Buy At") { str ->
                                 buyAtChange = str
                             }
                             Spacer(Modifier.height(5.dp))
@@ -254,10 +261,10 @@ fun CryptoDetailSettings (navController: NavHostController,
                                     .convertAmountWithPrecision(average.toString(),
                                         averagePrecision.toString())
                                 Text(text = "Average: $DOLLARS$realAverage")
-                                TextFieldWithIcons(average.toString(),
-                                    imageResource(Res.drawable.close_img),
+                                TextFieldWithIcons(averageChange,
+                                    Icons.Default.Close,
                                     "Average") { str->
-                                    average = str
+                                    averageChange = str
                                 }
                                 Spacer(Modifier.height(5.dp))
                                 Text(text = "Average Precision: $averagePrecision")
@@ -285,7 +292,7 @@ fun CryptoDetailSettings (navController: NavHostController,
                                         quantityPrecision)
                                 Text(text = "Quantity: $realQuantity")
                                 TextFieldWithIcons(quantityChange,
-                                    imageResource(Res.drawable.close_img),
+                                    Icons.Default.Close,
                                     "Quantity") {str ->
                                     quantityChange = str
                                 }
@@ -387,10 +394,10 @@ fun CryptoDetailSettings (navController: NavHostController,
                                     saveQuantity(realQuantity, it)
 
                                     //Save precisions
-                                    savePrecision(averagePrecision.toString(), it, AVERAGE)
-                                    savePrecision(sellAtPrecision.toString(), it, SELL_AT)
-                                    savePrecision(buyAtPrecision.toString(), it, BUY_AT)
-                                    savePrecision(quantityPrecision.toString(), it, QUANTITY)
+                                    savePrecision(averagePrecision, it, AVERAGE)
+                                    savePrecision(sellAtPrecision, it, SELL_AT)
+                                    savePrecision(buyAtPrecision, it, BUY_AT)
+                                    savePrecision(quantityPrecision, it, QUANTITY)
                                 }
                             }
                         }

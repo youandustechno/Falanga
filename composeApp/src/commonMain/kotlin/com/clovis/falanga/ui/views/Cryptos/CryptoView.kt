@@ -24,7 +24,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.key.Key.Companion.R
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,17 +33,17 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.clovis.falanga.PreferenceSUtil
 import com.clovis.falanga.StringsUtil.BASE_URL
 import com.clovis.falanga.StringsUtil.EMPTY
 import com.clovis.falanga.StringsUtil.SEPARATOR
 import com.clovis.falanga.WatchedShares
+import com.clovis.falanga.getPreferences
 import com.clovis.falanga.ui.Screen
 import com.clovis.falanga.ui.components.CryptoButton
 import com.clovis.falanga.ui.components.CryptoCard
 import com.clovis.falanga.ui.components.SearchView
 import com.clovis.falanga.ui.getContext
-import org.jetbrains.compose.resources.stringResource
+import com.clovis.falanga.ui.isAndroid
 
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -61,7 +60,10 @@ fun CryptosView(navController: NavHostController,
     var list by remember { mutableStateOf( emptyList<WatchedShares>()) }
 
     LaunchedEffect(Unit) {
-        list = PreferenceSUtil(prefs).getWatchedShares().toMutableList()
+        list = if(isAndroid()) {
+            getPreferences(context)?.getWatchedShares()?.toMutableList()?: emptyList()
+        }
+        else getPreferences(prefs)?.getWatchedShares()?.toMutableList() ?: emptyList()
     }
 
     LaunchedEffect(called) {
