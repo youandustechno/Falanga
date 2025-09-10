@@ -81,44 +81,42 @@ fun CryptoDetailSettings (navController: NavHostController,
 
     //Values
     val buyAt by storage.getBuyAt(name?:"").collectAsState("0")
-    var buyAtChange by remember { mutableStateOf("0") }
+    var buyAtChange by remember { mutableStateOf(buyAt) }
 
     var realBuyAt by remember {
         mutableStateOf(EMPTY)
     }
 
     val buyAtPrecision by storage.getPrecision(name?: "0", BUY_AT).collectAsState("0")
-    var buyAtPrecisionChange by remember { mutableStateOf("0") }
+    var buyAtPrecisionChange by remember { mutableStateOf(buyAtPrecision) }
 
     val sellAt by storage.getSellAt(name?: "0").collectAsState(EMPTY)
-    var sellAtChange by remember { mutableStateOf("0") }
+    var sellAtChange by remember { mutableStateOf(sellAt) }
 
     var realSellAt by remember { mutableStateOf(EMPTY) }
 
-    val sellAtPrecision by storage.getPrecision(name?: "0", SELL_AT).collectAsState(EMPTY)
-    var sellAtPrecisionChange by  remember { mutableStateOf("0") }
+    val sellAtPrecision by storage.getPrecision(name?: "0", SELL_AT).collectAsState("0")
+    var sellAtPrecisionChange by  remember { mutableStateOf(sellAtPrecision) }
 
     val quantity by storage.getQuantity(name?:EMPTY).collectAsState(EMPTY)
-    var quantityChange by remember { mutableStateOf("0") }
+    var quantityChange by remember { mutableStateOf(quantity) }
 
     var realQuantity by remember {
         mutableStateOf(EMPTY)
     }
 
-    val quantityPrecision by storage.getPrecision(name?: "0", QUANTITY).collectAsState(EMPTY)
-    var quantityPrecisionChange by remember { mutableStateOf("0") }
+    val quantityPrecision by storage.getPrecision(name?: "0", QUANTITY).collectAsState("0")
+    var quantityPrecisionChange by remember { mutableStateOf(quantityPrecision) }
 
-    var average by remember {
-        mutableStateOf(name?.let { storage.getAverage(it) }?: EMPTY)
-    }
+    val average by  storage.getAverage(name?: "0").collectAsState(EMPTY)
 
-    var averageChange by remember { mutableStateOf("0") }
+    var averageChange by remember { mutableStateOf(average) }
 
     var realAverage by remember {
         mutableStateOf(EMPTY)
     }
     val averagePrecision by  storage.getPrecision(name?:"0", AVERAGE).collectAsState("0")
-    var averagePrecisionChange by remember { mutableStateOf("0") }
+    var averagePrecisionChange by remember { mutableStateOf(averagePrecision) }
 
 
     var thisCrypto : CryptoUpdate? by remember {
@@ -192,7 +190,7 @@ fun CryptoDetailSettings (navController: NavHostController,
                                 .padding(8.dp)) {
                             //Willing to sell at
                             realSellAt =  StringsUtil
-                                .convertAmountWithPrecision(sellAt, sellAtPrecision)
+                                .convertAmountWithPrecision(sellAtChange, sellAtPrecisionChange)
                             Text(text = "Willing To Sell At: $DOLLARS$realSellAt")
                             TextFieldWithIcons(sellAtChange,
                                 Icons.Default.Close,
@@ -200,7 +198,7 @@ fun CryptoDetailSettings (navController: NavHostController,
                                 sellAtChange = str
                             }
                             Spacer(Modifier.height(5.dp))
-                            Text(text = "Sell at Precision: $sellAtPrecision")
+                            Text(text = "Sell at Precision: $sellAtPrecisionChange")
                             Box(
                                 Modifier
                                     .width(100.dp)
@@ -218,7 +216,7 @@ fun CryptoDetailSettings (navController: NavHostController,
                             }
 
                             realBuyAt =  StringsUtil
-                                .convertAmountWithPrecision(buyAt, buyAtPrecision)
+                                .convertAmountWithPrecision(buyAtChange, buyAtPrecisionChange)
                             //Willing to buy at
                             Text(text = "Willing To Buy At: $DOLLARS$realBuyAt")
                             TextFieldWithIcons(buyAtChange,
@@ -226,7 +224,7 @@ fun CryptoDetailSettings (navController: NavHostController,
                                 buyAtChange = str
                             }
                             Spacer(Modifier.height(5.dp))
-                            Text(text = "Buy at  Precision: $buyAtPrecision")
+                            Text(text = "Buy at  Precision: $buyAtPrecisionChange")
                             Box(
                                 Modifier
                                     .width(100.dp)
@@ -258,8 +256,8 @@ fun CryptoDetailSettings (navController: NavHostController,
                             Column{
                                 //Average
                                 realAverage =  StringsUtil
-                                    .convertAmountWithPrecision(average.toString(),
-                                        averagePrecision.toString())
+                                    .convertAmountWithPrecision(averageChange,
+                                        averagePrecisionChange)
                                 Text(text = "Average: $DOLLARS$realAverage")
                                 TextFieldWithIcons(averageChange,
                                     Icons.Default.Close,
@@ -267,7 +265,7 @@ fun CryptoDetailSettings (navController: NavHostController,
                                     averageChange = str
                                 }
                                 Spacer(Modifier.height(5.dp))
-                                Text(text = "Average Precision: $averagePrecision")
+                                Text(text = "Average Precision: $averagePrecisionChange")
                                 Spacer(Modifier.height(2.dp))
                                 Box(
                                     Modifier
@@ -288,8 +286,8 @@ fun CryptoDetailSettings (navController: NavHostController,
                                 //Quantity
                                 Spacer(Modifier.height(10.dp))
                                 realQuantity =  StringsUtil
-                                    .convertAmountWithPrecision(quantity,
-                                        quantityPrecision)
+                                    .convertAmountWithPrecision(quantityChange,
+                                        quantityPrecisionChange)
                                 Text(text = "Quantity: $realQuantity")
                                 TextFieldWithIcons(quantityChange,
                                     Icons.Default.Close,
@@ -297,7 +295,7 @@ fun CryptoDetailSettings (navController: NavHostController,
                                     quantityChange = str
                                 }
                                 Spacer(Modifier.height(5.dp))
-                                Text(text = "Quantity Precision: $quantityPrecision")
+                                Text(text = "Quantity Precision: $quantityPrecisionChange")
 
                                 Box(
                                     Modifier
@@ -394,10 +392,10 @@ fun CryptoDetailSettings (navController: NavHostController,
                                     saveQuantity(realQuantity, it)
 
                                     //Save precisions
-                                    savePrecision(averagePrecision, it, AVERAGE)
-                                    savePrecision(sellAtPrecision, it, SELL_AT)
-                                    savePrecision(buyAtPrecision, it, BUY_AT)
-                                    savePrecision(quantityPrecision, it, QUANTITY)
+                                    savePrecision(averagePrecisionChange, it, AVERAGE)
+                                    savePrecision(sellAtPrecisionChange, it, SELL_AT)
+                                    savePrecision(buyAtPrecisionChange, it, BUY_AT)
+                                    savePrecision(quantityPrecisionChange, it, QUANTITY)
                                 }
                             }
                         }
